@@ -1,0 +1,30 @@
+name: Rename
+
+on:
+  push:
+    paths:
+      - '**/*.ino.bin'
+  workflow_dispatch:
+
+jobs:
+  upload-firmware:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Rename Action
+        uses: actions/checkout@v3
+
+      - name: Find and rename *.ino.bin to update.bin
+        run: |
+          BIN_FILE=$(find . -type f -name '*.ino.bin' | head -n 1)
+          if [ -z "$BIN_FILE" ]; then
+            exit 1
+          cp "$BIN_FILE" update.bin
+
+      - name: Commit and push update.bin
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git add update.bin
+          git commit -m "Auto: rename firmware as update.bin"
+          git push
