@@ -1,4 +1,4 @@
-name: Renamer
+name: Action
 
 on:
   push:
@@ -14,20 +14,27 @@ jobs:
       - name: Check
         uses: actions/checkout@v3
 
-      - name: Find & Rename
+      - name: Find & rename
         run: |
           BIN_FILE=$(find . -type f -name '*.ino.bin' | head -n 1)
           if [ -z "$BIN_FILE" ]; then
             echo "No .ino.bin file found"
-            exit 1
+            exit 0
           fi
-          echo "Found firmware: $BIN_FILE"
-          cp "$BIN_FILE" update.bin
+          echo "Found: $BIN_FILE"
+          cp -f "$BIN_FILE" update.bin
+
+      - name: Debug
+        run: |
+          echo "Listing files..."
+          ls -lh
+          echo "SHA256 checksum:"
+          sha256sum update.bin || echo "update.bin not found"
 
       - name: Commit
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
-          git add update.bin
-          git commit -m "Auto: Upload firmware as update.bin"
+          git add -f update.bin
+          git commit -m "Auto: Upload firmware as update.bin" || echo "Nothing to commit"
           git push
